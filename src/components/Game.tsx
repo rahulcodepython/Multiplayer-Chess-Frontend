@@ -22,6 +22,7 @@ const Game = () => {
             const data = JSON.parse(event.data);
             switch (data.type) {
                 case INIT_GAME:
+                    setChess(pre => pre);
                     setBoard(chess.board());
                     setColor(data.payload.color);
                     setStarted(true);
