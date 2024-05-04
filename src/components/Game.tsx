@@ -98,31 +98,27 @@ const ChessBoard = ({ chess, setBoard, board, socket }: {
                         row.map((square, j) => {
                             const squareValue = String.fromCharCode(97 + (j % 8)) + "" + (8 - i) as Square;
                             return <div key={j} className={`w-20 h-20 flex items-center justify-center ${i % 2 === j % 2 ? 'bg-[#739552]' : 'bg-[#EBECD0]'}`} onClick={() => {
-                                console.log(square?.color, chess.turn());
-
-                                if (square?.color === undefined || square?.color === chess.turn()) {
-                                    if (!from) {
-                                        setFrom(squareValue);
-                                    } else {
-                                        try {
-                                            socket?.send(JSON.stringify({
-                                                type: MOVE, payload: {
-                                                    move: {
-                                                        from: from,
-                                                        to: squareValue
-                                                    }
+                                if (!from) {
+                                    setFrom(squareValue);
+                                } else {
+                                    try {
+                                        socket?.send(JSON.stringify({
+                                            type: MOVE, payload: {
+                                                move: {
+                                                    from: from,
+                                                    to: squareValue
                                                 }
-                                            }));
-                                            chess.move({
-                                                from: from,
-                                                to: squareValue
-                                            });
-                                            setBoard(chess.board());
-                                            setFrom(null);
-                                        } catch (error) {
-                                            setFrom(null);
+                                            }
+                                        }));
+                                        chess.move({
+                                            from: from,
+                                            to: squareValue
+                                        });
+                                        setBoard(chess.board());
+                                        setFrom(null);
+                                    } catch (error) {
+                                        setFrom(null);
 
-                                        }
                                     }
                                 }
                             }}>
