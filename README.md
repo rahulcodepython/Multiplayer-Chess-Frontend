@@ -1,30 +1,33 @@
-# React + TypeScript + Vite
+# Real-Time Chess Game Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project implements a frontend application using Vite and React to create a seamless, multi-threaded, two-player real-time chess game experience. It serves as a hobby project to showcase advanced websocket technologies for real-time communication between players.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Interactive Gameplay**: Experience responsive chess gameplay with real-time updates.
+- **Vite and React**: Harnesses the power of Vite for fast builds and React for declarative UI components.
+- **Multi-Threaded UI**: Utilizes multi-threading for handling concurrent game logic and user interactions.
+- **WebSocket Integration**: Implements WebSocket protocol for low-latency, bidirectional communication.
+- **Scalable Architecture**: Designed with scalability in mind for future feature expansions.
 
-## Expanding the ESLint configuration
+## Technologies Used
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Vite**: Provides ultra-fast frontend tooling with instant server start and optimized builds.
+- **React**: Offers a robust framework for building interactive user interfaces.
+- **WebSocket**: Facilitates real-time, event-driven communication between the frontend and backend servers.
 
-- Configure the top-level `parserOptions` property like this:
+## Getting Started
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+To run the project locally, follow these steps:
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+1. Clone the repository.
+2. Install dependencies using `npm install`.
+3. Start the development server with `npm run dev`.
+
+## Usage
+
+Detailed instructions on playing the game and interacting with the interface will be provided in the project documentation.
+
+## Contributing
+
+Contributions are welcome! Fork the repository and submit a pull request with your improvements.
