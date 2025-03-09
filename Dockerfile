@@ -1,16 +1,3 @@
-# FROM node:alpine
-
-# WORKDIR /frontend
-
-# COPY package.json .
-# RUN npm install 
-
-# COPY . .
-
-# EXPOSE 3000
-
-# CMD ["npm", "run", "dev"]
-
 # Use an official Node.js image as the base
 FROM node:23.4.0-alpine
 
