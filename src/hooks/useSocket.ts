@@ -7,15 +7,12 @@ export const useSocket = () => {
 
     useEffect(() => {
         const ws = new WebSocket(url);
-        ws.onopen = () => {
-            setSocket(ws);
-        };
-        ws.onclose = () => {
-            setSocket(null);
-        };
-        return () => {
-            ws.close();
-        };
+
+        ws.onopen = () => setSocket(ws);
+
+        ws.onclose = () => setSocket(null);
+
+        return () => ws.close();
     }, []);
 
     return socket;

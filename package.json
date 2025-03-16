@@ -14,11 +14,13 @@
         "chess.js": "^1.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
+        "react-modal": "^3.16.3",
         "react-router-dom": "^7.3.0"
     },
     "devDependencies": {
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
+        "@types/react-modal": "^3.16.3",
         "@typescript-eslint/eslint-plugin": "^8.26.0",
         "@typescript-eslint/parser": "^8.26.0",
         "@vitejs/plugin-react": "^4.3.4",

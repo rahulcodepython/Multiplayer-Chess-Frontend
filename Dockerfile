@@ -1,23 +1,36 @@
-# Use an official Node.js image as the base
-FROM node:23.4.0-alpine
+# Use Node.js base image
+FROM node:18-alpine AS builder
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# RUN npm install -g npm@latest
-# Copy package.json and package-lock.json to the working directory
-COPY package.json package-lock.json ./
-
 # Install dependencies
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy all files from the current directory to the working directory in the container
+# Copy source code
 COPY . .
 
+# Build the Vite project
 RUN npm run build
 
-# Expose port 3000 to the outside world
+# Expose port 3000
 EXPOSE 4173
 
-# Command to run the development server
-CMD ["npm", "run", "preview"]
+# Start the Vite server
+CMD [ "npm", "run", "preview" ]
+
+# # Use Nginx for serving static files
+# FROM nginx:alpine
+
+# # Copy built files from builder stage
+# COPY --from=builder /app/dist /usr/share/nginx/html
+
+# # Copy custom Nginx configuration
+# COPY ./Nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# # Expose port 80
+# EXPOSE 80
+
+# # Start Nginx server
+# CMD ["nginx", "-g", "daemon off;"]
