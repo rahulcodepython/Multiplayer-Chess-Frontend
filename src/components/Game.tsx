@@ -31,63 +31,86 @@ const chessItemTable = {
     k: 'King'
 };
 const Game = () => {
-    const socket = useSocket();
+    const { socket, queueFull } = useSocket();
     const [chess, setChess] = useState(new Chess());
     const [board, setBoard] = useState(chess.board());
     const [color, setColor] = useState<"black" | "white" | null>(null);
-    const [started, setStarted] = useState(false);
-    const [waiting, setWaiting] = useState(false);
-    const [queueFull, setQueueFull] = useState(false);
+    const [status, setStatus] = useState<'idle' | 'waiting' | 'playing'>('idle');
 
     useEffect(() => {
         if (!socket) {
             return;
         }
 
-        const handleMessage = (event: MessageEvent) => {
+        socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-
             switch (data.type) {
                 case INIT_GAME:
-                    setChess(new Chess()); // Reset game state
+                    setChess(pre => pre);
                     setBoard(chess.board());
                     setColor(data.payload.color);
-                    setStarted(true);
-                    setWaiting(false);
-                    setQueueFull(false);
+                    setStatus('playing');
                     break;
-
                 case MOVE:
                     const move = data.payload;
                     chess.move(move);
                     setBoard(chess.board());
                     break;
-
                 case GAME_OVER:
-                    alert(`Game Over! Winner: ${data.payload.winner}`);
-                    setStarted(false);
-                    setWaiting(false);
-                    setQueueFull(false);
                     break;
-
-                case WAITING_FOR_PLAYER:
-                    setWaiting(true);
-                    setQueueFull(false);
-                    break;
-
-                case GAME_QUEUE_FULL:
-                    setQueueFull(true);
-                    setWaiting(false);
-                    break;
-
                 default:
                     break;
             }
-        }
+        };
 
-        socket.addEventListener("message", handleMessage);
+        return () => {
+            socket.onmessage = null;
+        };
 
-        return () => socket.removeEventListener("message", handleMessage);
+        // const handleMessage = (event: MessageEvent) => {
+        //     const data = JSON.parse(event.data);
+
+        //     switch (data.type) {
+        //         case INIT_GAME:
+        //             setChess(new Chess()); // Reset game state
+        //             setBoard(chess.board());
+        //             setColor(data.payload.color);
+        //             setStarted(true);
+        //             setWaiting(false);
+        //             setQueueFull(false);
+        //             break;
+
+        //         case MOVE:
+        //             const move = data.payload;
+        //             chess.move(move);
+        //             setBoard(chess.board());
+        //             break;
+
+        //         case GAME_OVER:
+        //             alert(`Game Over! Winner: ${data.payload.winner}`);
+        //             setStarted(false);
+        //             setWaiting(false);
+        //             setQueueFull(false);
+        //             break;
+
+        //         case WAITING_FOR_PLAYER:
+        //             setWaiting(true);
+        //             setQueueFull(false);
+        //             break;
+
+        // case GAME_QUEUE_FULL:
+        //     setQueueFull(true);
+        //     setWaiting(false);
+        //     break;
+
+        //         default:
+        //             break;
+        //     }
+        // }
+
+        // socket.addEventListener("message", handleMessage);
+
+        // return () => socket.removeEventListener("message", handleMessage);
     }, [socket]);
 
     if (!socket) {
@@ -96,143 +119,37 @@ const Game = () => {
 
     const handlePlayGame = () => {
         socket?.send(JSON.stringify({ type: INIT_GAME }));
-        setWaiting(true); // Optimistically set waiting state
+        setStatus('waiting');
     };
 
     return (
-        <div className="flex items-center justify-center h-screen">
-            <div className="flex flex-col gap-8">
-                <div className="text-4xl text-white text-center">
-                    {color === 'black' ? 'Black' : 'White'} | {chess.turn() === color?.slice(0, 1) ? 'Your turn' : 'Opponent turn'}
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex flex-wrap w-[40rem]">
+        <div className="flex items-center justify-center h-screen container mx-auto">
+            <div className={`grid ${status === 'playing' ? 'grid-cols-[1fr_40rem_1fr]' : 'grid-cols-1'} gap-8`}>
+                {
+                    !chess.isCheckmate() && !chess.isDraw() && status === 'playing' && <div className={`text-4xl text-white  col-span-3`}>
+                        {chess.turn() === color?.slice(0, 1) ? 'Your turn' : 'Opponent turn'}
+                    </div>
+                }
+                {
+                    status === 'playing' ? <ChessHistory chess={chess} color={'w'} /> : <div></div>
+                }
+                <div className="grid grid-cols-1 gap-4 relative">
+                    <div className={`flex w-full ${status === 'playing' ? '' : 'invisible'}`}>
                         <ChessBoard chess={chess} setBoard={setBoard} board={board} socket={socket} color={color} turn={chess.turn()} />
                     </div>
                     {
-                        !started && <div className="flex flex-col justify-center items-center w-[20rem] text-white">
+                        status !== 'playing' && <div className="absolute top-1/2 w-full flex justify-center">
                             {
-                                queueFull ? <p style={{ color: "red" }}>Game queue is full. Try again later.</p> :
-                                    waiting ? <p className="px-8 py-4 rounded-md bg-green-700 text-white w-full text-lg">Waiting for opponent...</p> :
-                                        started ? <p>Game started! You are playing as {color}</p> :
-                                            <button className="px-8 py-4 rounded-md bg-green-700 text-white w-full text-lg" onClick={handlePlayGame}>Play Game</button>
+                                queueFull ? <p className="px-8 py-4 rounded-md bg-green-700 text-white text-lg">Game queue is full. Try again later.</p> :
+                                    status === 'waiting' ? <p className="px-8 py-4 rounded-md bg-green-700 text-white text-lg">Waiting for opponent...</p> :
+                                        status === 'idle' ? <button className="px-8 py-4 rounded-md bg-green-700 text-white text-lg cursor-pointer" onClick={handlePlayGame}>Play Game</button> : null
 
                             }
                         </div>
                     }
-                    {
-                        started && <div className="flex flex-col justify-center items-start">
-                            <div className="text-white mb-2 flex items-center justify-around w-full">
-                                <span>
-                                    # = Move number
-                                </span>
-                                <span>
-                                    M = Move
-                                </span>
-                                <span>
-                                    P = Piece
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <img src="/kill.png" width={40} height={40} className="bg-white" /> = Captured
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <img src="/promotion.png" width={40} height={40} className="bg-white" /> = Promotion
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <img src="/castling.png" width={40} height={40} className="bg-white" /> = Castling
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-2 w-full items-start text-center border border-white h-fit max-h-[640px] overflow-y-scroll">
-                                <div className="text-2xl font-bold text-white text-center border-b-2 py-4 h-fit border-r">
-                                    White
-                                </div>
-                                <div className="text-2xl font-bold text-white text-center border-b-2 py-4 h-fit">
-                                    Black
-                                </div>
-                                <div className={`text-white grid grid-cols-6 h-full py-1 border-r`}>
-                                    <span>#</span>
-                                    <span>M</span>
-                                    <span>P</span>
-                                    <span className="flex items-center justify-center">
-                                        <img src="/kill.png" width={20} height={20} className="bg-white" />
-                                    </span>
-                                    <span className="flex items-center justify-center">
-                                        <img src="/promotion.png" width={20} height={20} className="bg-white" />
-                                    </span>
-                                    <span className="flex items-center justify-center">
-                                        <img src="/castling.png" width={20} height={20} className="bg-white" />
-                                    </span>
-                                </div>
-                                <div className={`text-white grid grid-cols-6 h-full py-1`}>
-                                    <span>#</span>
-                                    <span>M</span>
-                                    <span>P</span>
-                                    <span className="flex items-center justify-center">
-                                        <img src="/kill.png" width={20} height={20} className="bg-white" />
-                                    </span>
-                                    <span className="flex items-center justify-center">
-                                        <img src="/promotion.png" width={20} height={20} className="bg-white" />
-                                    </span>
-                                    <span className="flex items-center justify-center">
-                                        <img src="/castling.png" width={20} height={20} className="bg-white" />
-                                    </span>
-                                </div>
-                                {
-                                    chess.history({ verbose: true }).map((item, i) => {
-                                        return <div key={i} className={`text-white grid grid-cols-6 h-full py-1 ${i % 2 === 0 && 'border-r'}`}>
-                                            <span>
-                                                {i + 1}.
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <span>
-                                                    {item.from}
-                                                </span>
-                                                <span>
-                                                    &rarr;
-                                                </span>
-                                                <span>
-                                                    {item.to}
-                                                </span>
-                                            </span>
-                                            <span>
-                                                {chessItemTable[item.piece]}
-                                            </span>
-                                            {
-                                                item.captured ? <span>
-                                                    &#10005;
-                                                </span> : <span>
-                                                    &nbsp;
-                                                </span>
-                                            }
-                                            <span>
-                                                {item.isPromotion() && item.promotion ? chessItemTable[item.promotion] : ''}
-                                            </span>
-                                            {
-                                                item.isQueensideCastle() ? <span>
-                                                    O-O-O
-                                                </span> : item.isKingsideCastle() ? <span>
-                                                    O-O
-                                                </span> : <span>
-                                                    &nbsp;
-                                                </span>
-                                            }
-                                        </div>
-                                    }
-                                    )
-                                }
-                            </div>
-                        </div>
-                    }
                 </div>
                 {
-                    chess.isCheckmate() && <div className="text-4xl text-white text-center">
-                        {`Checkmate! Winner is ${chess.turn() === 'w' ? 'Black' : 'White'}.`}
-                    </div>
-                }
-                {
-                    chess.isDraw() && <div className="text-4xl text-white text-center">
-                        Draw
-                    </div>
+                    status === 'playing' && <ChessHistory chess={chess} color={'b'} />
                 }
             </div>
         </div>
@@ -326,9 +243,19 @@ const ChessBoard = ({ chess, setBoard, board, socket, color, turn }: {
         }
     }
 
-    return <div className={`border ${color === 'black' && `transform rotate-180`}`}>
+    return <div className={`border ${color === 'black' && !chess.isCheckmate() && !chess.isDraw() && `transform rotate-180`} text-white ${chess.isCheckmate() && chess.isDraw() && 'w-full flex items-center justify-center'}`}>
         {
-            board.map((row, i) => {
+            chess.isCheckmate() && <div className="text-4xl text-white text-center">
+                {`Checkmate! Winner is ${chess.turn() === 'w' ? 'Black' : 'White'}.`}
+            </div>
+        }
+        {
+            chess.isDraw() && <div className="text-4xl text-white text-center">
+                Draw
+            </div>
+        }
+        {
+            !chess.isCheckmate() && !chess.isDraw() && board.map((row, i) => {
                 return <div key={i} className="flex">
                     {
                         row.map((square, j) => {
@@ -383,6 +310,72 @@ const ChessBoard = ({ chess, setBoard, board, socket, color, turn }: {
                 </div>
             </div>
         </Modal>
+    </div>
+}
+
+
+const ChessHistory = ({ chess, color }: { chess: Chess, color: Color }) => {
+    return <div className="grid grid-cols-1 items-start text-center border border-white h-fit max-h-[640px] w-[370px] max-w-[370px] overflow-y-scroll">
+        <div className="text-2xl font-bold text-white text-center border-b-2 py-4 h-fit">
+            {color === 'w' ? 'White' : 'Black'} History
+        </div>
+        <div className={`text-white grid grid-cols-6 py-1`}>
+            <span>#</span>
+            <span>M</span>
+            <span>P</span>
+            <span className="flex items-center justify-center">
+                <img src="/kill.png" width={20} height={20} className="bg-white" />
+            </span>
+            <span className="flex items-center justify-center">
+                <img src="/promotion.png" width={20} height={20} className="bg-white" />
+            </span>
+            <span className="flex items-center justify-center">
+                <img src="/castling.png" width={20} height={20} className="bg-white" />
+            </span>
+        </div>
+        {
+            chess.history({ verbose: true }).map((item, i) => {
+                return item.color === color && <div key={i} className={`text-white grid grid-cols-6 h-full py-1 ${i % 2 === 0 && 'border-r'}`}>
+                    <span>
+                        {i + 1}.
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <span>
+                            {item.from}
+                        </span>
+                        <span>
+                            &rarr;
+                        </span>
+                        <span>
+                            {item.to}
+                        </span>
+                    </span>
+                    <span>
+                        {chessItemTable[item.piece]}
+                    </span>
+                    {
+                        item.captured ? <span>
+                            &#10005;
+                        </span> : <span>
+                            &nbsp;
+                        </span>
+                    }
+                    <span>
+                        {item.isPromotion() && item.promotion ? chessItemTable[item.promotion] : ''}
+                    </span>
+                    {
+                        item.isQueensideCastle() ? <span>
+                            O-O-O
+                        </span> : item.isKingsideCastle() ? <span>
+                            O-O
+                        </span> : <span>
+                            &nbsp;
+                        </span>
+                    }
+                </div>
+            }
+            )
+        }
     </div>
 }
 
