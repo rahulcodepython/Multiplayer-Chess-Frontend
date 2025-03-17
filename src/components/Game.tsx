@@ -67,50 +67,6 @@ const Game = () => {
             socket.onmessage = null;
         };
 
-        // const handleMessage = (event: MessageEvent) => {
-        //     const data = JSON.parse(event.data);
-
-        //     switch (data.type) {
-        //         case INIT_GAME:
-        //             setChess(new Chess()); // Reset game state
-        //             setBoard(chess.board());
-        //             setColor(data.payload.color);
-        //             setStarted(true);
-        //             setWaiting(false);
-        //             setQueueFull(false);
-        //             break;
-
-        //         case MOVE:
-        //             const move = data.payload;
-        //             chess.move(move);
-        //             setBoard(chess.board());
-        //             break;
-
-        //         case GAME_OVER:
-        //             alert(`Game Over! Winner: ${data.payload.winner}`);
-        //             setStarted(false);
-        //             setWaiting(false);
-        //             setQueueFull(false);
-        //             break;
-
-        //         case WAITING_FOR_PLAYER:
-        //             setWaiting(true);
-        //             setQueueFull(false);
-        //             break;
-
-        // case GAME_QUEUE_FULL:
-        //     setQueueFull(true);
-        //     setWaiting(false);
-        //     break;
-
-        //         default:
-        //             break;
-        //     }
-        // }
-
-        // socket.addEventListener("message", handleMessage);
-
-        // return () => socket.removeEventListener("message", handleMessage);
     }, [socket]);
 
     if (!socket) {
